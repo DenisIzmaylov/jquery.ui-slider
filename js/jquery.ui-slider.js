@@ -21,7 +21,7 @@
  *
  * 3. Update:
  *    $(elem).UISlider('value', 3);
- *    $(elem).UISlider('update', {min: 1, max: 10});
+ *    $(elem).UISlider({min: 1, max: 10});
  *
  * 4. Destroy:
  *    $(elem).UISlider('destroy');
@@ -110,7 +110,6 @@
                 if (options.createElements) {
 
                     this.owner.append(basicTemplate);
-
                 }
 
                 this.owner
@@ -157,27 +156,77 @@
              */
             update: function (options) {
 
-                $.extend(this.options, options);
+                for (var key in options) {
+                    if (!options.hasOwnProperty(key)) continue;
 
-
-                /**
-                 * There is keys which should be custom handled
-                 * @type {Array}
-                 */
-                var list = ['value', 'min', 'max'],
-                    key;
-
-                for (var index = 0, length = list.length; index < length; index++) {
-
-                    key = list[index];
-
-                    if (typeof options[key] !== 'undefined') {
-
-                        this.handleAction(key, [options[key]]);
-                    }
+                    this.setOption(key, options[key]);
                 }
 
             }, // update()
+
+
+            /**
+             * @param {String} name
+             * @param {*} value
+             * @todo we can extract DOM operations to external method
+             */
+            setOption: function (name, value) {
+
+                var previousValue = this.options[name];
+
+                this.options[name] = value;
+
+
+                switch (name) {
+
+                    case 'value':
+
+                        this.owner.trigger('change', [this.options.value, previousValue]);
+
+                    // now we will fall to the next block:
+
+                    case 'min':
+                    case 'max':
+
+                        var position =
+                            this.options.value * 100 /
+                            (this.options.max - this.options.min);
+
+                        if (this.options.vertical) {
+
+                            position = 100 - position;
+
+                            this.thumbObj.css('top', position + '%');
+
+                        } else {
+
+                            this.thumbObj.css('left', position + '%');
+                        }
+
+
+                        break;
+
+                } // switch (...)
+
+            }, // setOption()
+
+
+            /**
+             * @param {String} name
+             * @returns {*}
+             */
+            getOption: function (name) {
+
+                var result = this.options[name];
+
+                if (name === 'value') {
+
+                    result = this._startedValue || result;
+                }
+
+                return result;
+
+            }, // getOption()
 
 
             /*
@@ -543,10 +592,7 @@
 
         var result,
             action = (typeof param === 'string') ? param : 'create',
-            options = (typeof param === 'object') ?
-                param :
-                (typeof arguments[1] === 'object') ? arguments[1] : {};
-
+            options = (typeof param === 'object') ? param : arguments[1];
 
 
         // Process each element
@@ -600,7 +646,11 @@
 
                 case 'update':
 
-                    componentInstances.update(options);
+                    if (currentInstance) {
+
+                        currentInstance.update(options);
+                    }
+
                     break;
 
 
@@ -620,19 +670,20 @@
 
                 default:
 
-                    if (typeof currentInstance[action] === 'function') {
+                    if (currentInstance) {
 
-                        result = currentInstance[action](options);
+                        if (typeof currentInstance[action] === 'function') {
 
-                    } else {
+                            result = currentInstance[action](options);
 
-                        result = currentInstance.options[action];
+                        } else {
 
-                        if (typeof options !== 'undefined') {
+                            result = currentInstance.options[action];
 
-                            currentInstance.update({
-                                action: options
-                            });
+                            if (typeof options !== 'undefined') {
+
+                                currentInstance.setOption(action, options);
+                            }
                         }
                     }
 

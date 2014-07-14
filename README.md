@@ -45,5 +45,5 @@ Slider contol (like iOS) to configure a value in specified range
 
 
 ###Todo###
-1. Value assignment is not work properly.
-2. Create getValue() and setValue() methods instead of handleAction().
+1. Fix destroy method
+2. Add transition for onOwnerClick/onTrackClick

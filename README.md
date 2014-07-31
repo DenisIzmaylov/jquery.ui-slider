@@ -25,15 +25,16 @@ Slider contol (like iOS) to configure a value in specified range
 	
 	$(document).ready(function () {
 		
-		$('#container').VehicleNumber({
+		$('#container').UISlider({
 			
-			number: 'а123ра',
-			district: '77',
-			style: 'small'
+            min: 0,
+            max: 99,
+            value: 50,
+            smooth: false
+ 			
+		}).on('change', function (value) {
 			
-		}).on('click', function () {
-			
-			$(this).VehicleNumber('destroy');
+			console.log('Your value:', value);
 			
 		});
 	

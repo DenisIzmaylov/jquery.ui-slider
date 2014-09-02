@@ -48,3 +48,4 @@ Slider contol (like iOS) to configure a value in specified range
 ###Todo###
 1. Fix destroy method
 2. Add transition for onOwnerClick/onTrackClick
+3. Add 'invert', 'ranges' and 'highlight' options

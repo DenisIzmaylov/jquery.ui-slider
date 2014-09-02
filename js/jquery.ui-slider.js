@@ -27,8 +27,10 @@
  *    $(elem).UISlider('destroy');
  *
  * 5. Events:
- *    $(elem).on('thumbmove', function (value) { ... }); // when slider thumb is moving
- *    $(elem).on('change', function (value) { ... } ); // when user changes are complete
+ *    $(elem).on('start', function (event) { ... }); // when edit mode turns on
+ *    $(elem).on('end', function (event) { ... }); // when edit mode turns off
+ *    $(elem).on('thumbmove', function (event, value) { ... }); // when slider thumb is moving
+ *    $(elem).on('change', function (event, value) { ... } ); // when user changes are complete
  */
 
 ;(function (factory) {
@@ -71,7 +73,8 @@
             seekOnOwner: true,
             vertical: false, // true - to use vertical orientation
 
-            createElements: true
+            createElements: true,
+            allowFocus: false
 
         }, // defaultOptions {...}
 
@@ -79,10 +82,18 @@
         /** @type {String} */
         basicTemplate =
             '<div class="ui-slider-track">' +
-                '<div class="ui-slider-thumb">' +
+                '<div href="#" class="ui-slider-thumb">' +
                     '<div></div>' +
                 '</div>' +
-            '</div>',
+                '</div>',
+
+        /** @type {String} */
+        withFocusTemplate =
+            '<div class="ui-slider-track">' +
+                '<a href="#" class="ui-slider-thumb">' +
+                    '<div></div>' +
+                '</a>' +
+                '</div>',
 
 
 
@@ -109,7 +120,11 @@
                  */
                 if (options.createElements) {
 
-                    this.owner.append(basicTemplate);
+                    this.owner.append(
+                        options.allowFocus ?
+                            withFocusTemplate :
+                            basicTemplate
+                    );
                 }
 
                 this.owner
@@ -172,41 +187,62 @@
              */
             setOption: function (name, value) {
 
-                var previousValue = this.options[name];
+                var previousValue = this.options[name],
+                    shouldUpdatePosition = false;
 
                 this.options[name] = value;
 
 
                 switch (name) {
 
+                    case 'vertical':
+
+                        this.owner
+                            .toggleClass('vertical', value)
+                            .toggleClass('horizontal', !value);
+
+                        shouldUpdatePosition = true;
+                        break;
+
                     case 'value':
 
                         this.owner.trigger('change', [this.options.value, previousValue]);
+
+                        shouldUpdatePosition = true;
+                        break;
 
                     // now we will fall to the next block:
 
                     case 'min':
                     case 'max':
 
-                        var position =
-                            this.options.value * 100 /
-                            (this.options.max - this.options.min);
-
-                        if (this.options.vertical) {
-
-                            position = 100 - position;
-
-                            this.thumbObj.css('top', position + '%');
-
-                        } else {
-
-                            this.thumbObj.css('left', position + '%');
-                        }
-
-
+                        shouldUpdatePosition = true;
                         break;
 
                 } // switch (...)
+
+
+                if (shouldUpdatePosition) {
+
+                    var position =
+                        this.options.value * 100 /
+                            (this.options.max - this.options.min);
+
+                    if (this.options.vertical) {
+
+                        position = 100 - position;
+
+                        this.thumbObj
+                            .css('left', 'auto')
+                            .css('top', position + '%');
+
+                    } else {
+
+                        this.thumbObj
+                            .css('left', position + '%')
+                            .css('top', 'auto');
+                    }
+                }
 
             }, // setOption()
 
@@ -333,7 +369,9 @@
 
                 if (value) {
 
-                    this.owner.addClass('editing');
+                    this.owner
+                        .addClass('editing')
+                        .trigger('start');
 
                     $(window)
                         .on('mousemove touchmove', this._onWindowMouseMove)
@@ -345,6 +383,7 @@
 
                     this.owner
                         .removeClass('editing')
+                        .trigger('end')
                         .trigger('change', [this.options.value]);
 
                     $(window)
@@ -495,8 +534,8 @@
 
                 this.setEditMode(true);
 
-                event.preventDefault();
-                event.stopPropagation();
+                //event.preventDefault();
+                //event.stopPropagation();
 
             }, // onThumbMouseDown()
 

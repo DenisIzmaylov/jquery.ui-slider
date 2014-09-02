@@ -13,15 +13,27 @@
 
                 var position = 7;
 
-                $('.ui-slider-control')
+                $('.ui-slider')
                     .UISlider({
                         min: 1,
                         max: 10,
                         value: position
                     })
-                    .on('change', function (event, value) {
+                    .on('change thumbmove', function (event, value) {
 
-                        $('.value').text(value);
+                        var targetPath = $(event.target).data('target');
+
+                        $(targetPath).text(value);
+
+                    })
+                    .on('start', function () {
+
+                        $('.value').addClass('editing');
+
+                    })
+                    .on('end', function () {
+
+                        $('.value').removeClass('editing');
 
                     });
 
@@ -31,27 +43,50 @@
                 $('input[type=checkbox]')
                         .on('change', function () {
 
-                            $('.ui-slider-control').UISlider(
-                                    $(this).prop('name'),
-                                    $(this).prop('checked')
-                            );
+                            var name = $(this).prop('name'),
+                                value = $(this).prop('checked');
+
+                            if (name === 'popup') {
+
+                                $('.popup-buttons').toggle( value );
+
+                            } else {
+
+                                $('.ui-slider').UISlider( name, value );
+                            }
                         });
             });
 
         </script>
+        <style type="text/css">
+
+            .value.editing {
+                color: #aaa;
+            }
+
+            .ui-slider-control.horizontal {
+                width: 100%;
+            }
+            .ui-slider-control.vertical {
+                height: 200px;
+            }
+
+        </style>
+
     </head>
     <body>
         <div class="container">
             <h1>UI<strong>Slider</strong></h1>
             <div class="row">
-                <div class="col-xs-12 col-sm-6">
-                    <div class="ui-slider-control"></div>
+                <div class="col-xs-12 col-sm-6 text-center">
+                    <div data-target="#value1" class="ui-slider"></div>
+                    <div data-target="#value2" class="ui-slider"></div>
+                    <div data-target="#value3" class="ui-slider"></div>
                 </div>
-                <div class="col-xs-12 visible-xs text-center">
-                    <p>Your selected value: <b class="value">0</b></p>
-                </div>
-                <div class="col-sm-6 hidden-xs text-left">
-                    <p>Your selected value: <b class="value">0</b></p>
+                <div class="col-xs-12 col-sm-6 text-left">
+                    <p>Slider 1: <b id="value1" class="value">0</b></p>
+                    <p>Slider 2: <b id="value2" class="value">0</b></p>
+                    <p>Slider 3: <b id="value3" class="value">0</b></p>
                 </div>
             </div>
             <div class="row">
@@ -60,6 +95,9 @@
                         <div class="panel-heading">Play with control options:</div>
                         <div class="panel-body">
                             <form role="form" onsubmit="return false">
+                                <div class="checkbox">
+                                    <label><input name="vertical" type="checkbox" /> vertical</label>
+                                </div>
                                 <div class="checkbox">
                                     <label><input name="smooth" type="checkbox" checked /> smooth</label>
                                 </div>
@@ -78,6 +116,7 @@
                         <div class="panel-heading">Little help</div>
                         <div class="panel-body">
 							You can also specifiy custom options for your control:<ul>
+                                <li><strong>vertical</strong> - orientation can be vertical or horizontal (by default)</li>
                                 <li><strong>smooth</strong> - to limit points only by specified values, by default is false</li>
                                 <li><strong>seekOnTrack</strong> - to allow seek by track line</li>
                                 <li><strong>seekOnOwner</strong> - to allow seek by whole component area</li>
